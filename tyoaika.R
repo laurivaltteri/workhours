@@ -3,7 +3,10 @@ library(magrittr)
 library(tidyverse)
 library(lubridate)
 library(ggmap)
-system.time(x <- fromJSON("~/gdrive/Takeout/Takeout/Location History/Locationhistory.json"))
+#system.time(x <- fromJSON("~/gdrive/Takeout/Takeout/Location History/Locationhistory.json"))
+system.time(x <- jsonlite::fromJSON("/Users/lauriahonen/gdrive/Takeout/Takeout/Location History/Locationhistory_201912.json"))
+system.time(x <- jsonlite::read_json("/Users/lauriahonen/gdrive/Takeout/Takeout/Location History/Location History_201912.json", simplifyVector = TRUE))
+                                     
 y <- as_tibble(x$locations)
 # as human time
 y$time <- as_datetime(as.numeric(y$timestampMs)/1000, origin = lubridate::origin, tz="Europe/Helsinki")
@@ -79,10 +82,12 @@ workinhours <-
           data,
           ~when_if_at_work(.x, 0)
         ) %>% as_datetime(tz = "Europe/Helsinki"),
-      duration = as.period(interval(intime, outtime))
+      duration = interval(intime, outtime)
   )
 workinhours %>% filter(workday) %>% pull(duration) %>% period_to_seconds() %>% mean() %>% seconds_to_period()
 workinhours %>% filter(workday) %>% pull(intime) %>% get_time() %>% period_to_seconds() %>% mean() %>% seconds_to_period()
+workinhours %>% filter(workday) %>% pull(duration) %>% mean() %>% seconds_to_period() - seconds_to_period(7.75*3600) -> extra
+extra * 235
 #workinhours %>% filter(workday) %>% pull(duration) %>% period_to_seconds() - period_to_seconds(hms("7:45:00")) %>% seconds_to_period()
 
 get_time <- function(time = now()) {
